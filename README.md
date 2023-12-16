@@ -26,7 +26,6 @@ Installing steam-patch is a bit buggy right now, you might need to do the follow
 4. `sudo systemctl restart steam-patch.service`
 
 # Thanks Go To...
-Thanks go to the following:
 - **Aarron Lee** for the TDP and LeGoRemapper plugins
 - **corando98** for ROGueENEMY and steam-patch
 - **Antheas** for HHD
