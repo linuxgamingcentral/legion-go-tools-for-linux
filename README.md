@@ -13,19 +13,19 @@ This script takes a bunch of community-made tools for the Legion Go and mashes t
 
 This script is very buggy and you will likely not be able to install everything you need (such as steam-patch). It was primarily made with ChimeraOS in mind but it *may* be compatible with other Arch-based distros.
 
-# Install
+## Install
 Download and run the script with:
 
 `curl -L https://raw.githubusercontent.com/linuxgamingcentral/legion-go-tools-for-linux/main/lego_chimera.sh | sh`
 
-# If You're Installing Steam-Patch...
+## If You're Installing Steam-Patch...
 Installing steam-patch is a bit buggy right now, you might need to do the following after installing it:
 1. `sudo systemctl stop steam-patch.service`
 2. Download [steam-patch artifact](https://github.com/corando98/steam-patch/actions/runs/7017005010) and extract
 3. `sudo cp steam-patch /usr/bin/`
 4. `sudo systemctl restart steam-patch.service`
 
-# Thanks Go To...
+## Thanks Go To...
 - **Aarron Lee** for the TDP and LeGoRemapper plugins
 - **corando98** for ROGueENEMY and steam-patch
 - **Antheas** for HHD
