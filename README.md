@@ -7,20 +7,25 @@ This script takes a bunch of community-made tools for the Legion Go and mashes t
 - [Handheld Daemon](https://github.com/antheas/hhd) - basically an enhanced version of ROGueENEMY
 - [steam-patch](https://github.com/corando98/steam-patch) - fixes TDP and GPU clock speed in QAM, and replaces Steam's button icons to give it a more consistent look
 - [Legion Go theme for CSS Loader](https://github.com/frazse/SBP-Legion-Go-Theme) - makes your controller profile actually look like a Legion Go
-- [PS5 to Xbox controller glyphs for CSS Loader](https://github.com/frazse/PS5-to-Xbox-glyphs) - converts PS5 glyphs to Xbox; recommended after applying ROGueENEMY or HHD
+- [PS5 to Xbox controller glyphs for CSS Loader](https://github.com/frazse/PS5-to-Xbox-glyphs) - converts PS5 glyphs to Xbox; recommended after installing ROGueENEMY or HHD
 
-![Screenshot from 2023-12-15 15-22-49](https://github.com/linuxgamingcentral/legion-go-tools-for-linux/assets/101075966/bd2a6b57-e549-45ba-804e-abe92901f8bb)
+![Screenshot from 2023-12-16 02-18-02](https://github.com/linuxgamingcentral/legion-go-tools-for-linux/assets/101075966/3df7e0a3-1912-4ab6-8beb-9b77601406c9)
 
-This script is very buggy and you will likely not be able to install everything you need (such as steam-patch). You'll need to enter your sudo password twice. Additionally, the script is hard-coded to only work with ChimeraOS at the moment.
+This script is very buggy and you will likely not be able to install everything you need (such as steam-patch). It was primarily made with ChimeraOS in mind but it *may* be compatible with other Arch-based distros.
 
-Download and run the script as follows:
-```
-git clone https://github.com/linuxgamingcentral/legion-go-tools-for-linux.git
-cd legion-go-tools-for-linux/
-chmod +x lego_chimera.sh
-./lego_chimera.sh
-```
+# Install
+Download and run the script with:
 
+`curl -L https://raw.githubusercontent.com/linuxgamingcentral/legion-go-tools-for-linux/main/lego_chimera.sh | sh`
+
+# If You're Installing Steam-Patch...
+Installing steam-patch is a bit buggy right now, you might need to do the following after installing it:
+1. `sudo systemctl stop steam-patch.service`
+2. Download [steam-patch artifact](https://github.com/corando98/steam-patch/actions/runs/7017005010) and extract
+3. `sudo cp steam-patch /usr/bin/`
+4. `sudo systemctl restart steam-patch.service`
+
+# Thanks Go To...
 Thanks go to the following:
 - **Aarron Lee** for the TDP and LeGoRemapper plugins
 - **corando98** for ROGueENEMY and steam-patch
