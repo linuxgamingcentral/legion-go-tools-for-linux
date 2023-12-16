@@ -82,6 +82,8 @@ elif [ "$Choice" == "UNINSTALL_RGB" ]; then
 
 	sudo rm -rf $HOME/homebrew/plugins/LegionGoRemapper
 	
+	sudo systemctl restart plugin_loader.service
+	
 	zenity --info --title "Legion Go Tools for Linux" --text "Legion Go Remapper plugin removed!" --width 400 --height 75
 
 elif [ "$Choice" == "ROGUE" ]; then
