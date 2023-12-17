@@ -119,9 +119,9 @@ elif [ "$Choice" == "HHD" ]; then
 	sudo pacman -R --noconfirm handygccs-git
 	
 	# add PlayStation driver quirk. This will use Steam Input instead of the PS driver - we'll have touchpad issues otherwise
-	echo -e "Blacklisting hid_playstation...\n"
-	echo "blacklist hid_playstation" | sudo tee /usr/lib/modprobe.d/hhd.conf
-	echo -e "hid_playstation blacklisted!\n"
+	#echo -e "Blacklisting hid_playstation...\n"
+	#echo "blacklist hid_playstation" | sudo tee /usr/lib/modprobe.d/hhd.conf
+	#echo -e "hid_playstation blacklisted!\n"
 	
 	echo -e "Enabling HHD service...\n"
 	sudo systemctl enable hhd@$(whoami)
@@ -142,6 +142,8 @@ elif [ "$Choice" == "UNINSTALL_HHD" ]; then
 	
 	echo -e "Uninstalling HHD...\n"
 	sudo pacman -R --noconfirm hhd
+	sudo rm /etc/udev/modprobe.d/hhd.conf
+	rm -rf $HOME/.config/hhd
 	
 	echo -e "Enabling handycon service...\n"
 	sudo systemctl enable handycon.service
