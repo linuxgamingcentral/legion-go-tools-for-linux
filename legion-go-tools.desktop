@@ -1,0 +1,8 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Exec=cd /tmp/ && rm -f lego_chimera.sh && curl -L https://raw.githubusercontent.com/linuxgamingcentral/legion-go-tools-for-linux/main/lego_chimera.sh | sh
+Icon=steamdeck-gaming-return
+Name=Legion Go Tools
+StartupNotify=false
+Terminal=true
+Type=Application
