@@ -13,6 +13,8 @@ This script takes a bunch of community-made tools for the Legion Go and mashes t
 
 This script is very buggy and you will likely not be able to install everything you need (such as steam-patch). It was primarily made with ChimeraOS in mind but it *may* be compatible with other Arch-based distros.
 
+See my [post](https://linuxgamingcentral.com/posts/legion-go-tools-for-linux/) or the [Legion Go Tricks page](https://github.com/aarron-lee/legion-go-tricks) for more info.
+
 ## Install
 Download and run the script with:
 
