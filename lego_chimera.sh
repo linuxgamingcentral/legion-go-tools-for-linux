@@ -4,12 +4,57 @@ clear
 
 echo -e "Legion Go Tools for Linux - script by Linux Gaming Central\n"
 
-echo -e "Unlocking file system...\n"
-sudo frzr-unlock
-echo -e "Unlocked!\n"
+# Removes unhelpful GTK warnings
+zen_nospam() {
+  zenity 2> >(grep -v 'Gtk' >&2) "$@"
+}
+
+# zenity functions
+info() {
+	i=$1
+	zen_nospam --info --title "$title" --width 400 --height 75 --text "$1"
+}
+
+warning() {
+	i=$1
+	zen_nospam --warning --title "$title" --width 400 --height 75 --text "$1"
+}
+
+error() {
+	e=$1
+	zen_nospam --error --title="$title" --width=400 --height=75 --text "$1"
+}
+
+# functions
+get_sudo_password() {
+	sudo_password=$(zen_nospam --password --title="$title")
+	if [[ ${?} != 0 || -z ${sudo_password} ]]; then
+		echo -e "User canceled.\n"
+		exit
+	elif ! sudo -kSp '' [ 1 ] <<<${sudo_password} 2>/dev/null; then
+		echo -e "User entered wrong password.\n"
+		error "Wrong password."
+		exit
+	else
+		echo -e "Password entered, let's proceed...\n"
+	fi
+}
+
+title="Legion Go Tools for Linux"
+
+get_sudo_password
+
+# unlock filesystem if we're using ChimeraOS
+if [ $USER == "gamer" ]; then
+	echo -e "Unlocking file system...\n"
+	sudo frzr-unlock
+	echo -e "Unlocked!\n"
+fi
+
+cd $HOME
 
 while true; do
-Choice=$(zenity --width 1000 --height 550 --list --radiolist --multiple --title "Legion Go Tools for Linux"\
+Choice=$(zen_nospam --width 1000 --height 550 --list --radiolist --multiple --title "$title"\
 	--column "Select One" \
 	--column "Option" \
 	--column="Description"\
@@ -17,8 +62,9 @@ Choice=$(zenity --width 1000 --height 550 --list --radiolist --multiple --title 
 	FALSE UNINSTALL_DECKY "Uninstall Decky Loader"\
 	FALSE TDP "Install or Update the Simple Decky TDP plugin"\
 	FALSE UNINSTALL_TDP "Uninstall the Simple Decky TDP plugin"\
-	FALSE RGB "Install or Update the RGB Decky plugin"\
-	FALSE UNINSTALL_RGB "Uninstall the RGB Decky plugin"\
+	FALSE RGB "Install or Update the LegionGoRemapper plugin"\
+	FALSE FAN_CURVE "Enable custom fan curves in LegionGoRemapper (experimental)"\
+	FALSE UNINSTALL_RGB "Uninstall the LegionGoRemapper plugin"\
 	FALSE ROGUE "Install or Update ROGueENEMY"\
 	FALSE UNINSTALL_ROGUE "Uninstall ROGueENEMY"\
 	FALSE HHD "Install or Update Handheld Daemon (HHD)"\
@@ -35,23 +81,20 @@ if [ $? -eq 1 ] || [ "$Choice" == "EXIT" ]; then
 	exit
 
 elif [ "$Choice" == "DECKY" ]; then
-	cd $HOME
-
 	curl -L https://github.com/SteamDeckHomebrew/decky-installer/releases/latest/download/install_release.sh | sh
 	
-	zenity --info --title "Legion Go Tools for Linux" --text "Decky Loader installation complete!" --width 400 --height 75
+	info "Decky Loader installation complete!"
 
 elif [ "$Choice" == "UNINSTALL_DECKY" ]; then
-	cd $HOME
-
 	curl -L https://github.com/SteamDeckHomebrew/decky-installer/releases/latest/download/uninstall.sh | sh
 	
-	zenity --info --title "Legion Go Tools for Linux" --text "Decky Loader uninstallation complete!" --width 400 --height 75
+	info "Decky Loader uninstallation complete!" 
 
 elif [ "$Choice" == "TDP" ]; then
+	echo -e "Installing plugin...\n"
 	curl -L https://raw.githubusercontent.com/aarron-lee/SimpleDeckyTDP/main/install.sh | sh
 	
-	zenity --info --title "Legion Go Tools for Linux" --text "Simple Decky TDP plugin installed/updated!" --width 400 --height 75
+	info "Simple Decky TDP plugin installed/updated!" 
 
 elif [ "$Choice" == "UNINSTALL_TDP" ]; then
 	if [ "$EUID" -eq 0 ]; then
@@ -59,18 +102,31 @@ elif [ "$Choice" == "UNINSTALL_TDP" ]; then
   		exit
 	fi
 
-	cd $HOME
-
-	sudo rm -rf $HOME/homebrew/plugins/SimpleDeckyTDP
+	if ! [ -d $HOME/homebrew/plugins/SimpleDeckyTDP ]; then
+		error "SimplDeckyTDP plugin not found."
+	else
+		sudo rm -rf $HOME/homebrew/plugins/SimpleDeckyTDP
 	
-	sudo systemctl restart plugin_loader.service
+		sudo systemctl restart plugin_loader.service
 
-	zenity --info --title "Legion Go Tools for Linux" --text "Simple Decky TDP removed!" --width 400 --height 75
+		info "Simple Decky TDP removed!" 
+	fi
 
 elif [ "$Choice" == "RGB" ]; then
+	echo -e "Installing plugin...\n"
 	curl -L https://raw.githubusercontent.com/aarron-lee/LegionGoRemapper/main/install.sh | sh
 	
-	zenity --info --title "Legion Go Tools for Linux" --text "Legion Go Remapper plugin installed/updated!" --width 400 --height 75
+	info "Legion Go Remapper plugin installed/updated!"
+
+elif [ "$Choice" == "FAN_CURVE" ]; then
+	echo -e "Enabling custom fan curves...\n"
+	if [ $USER == "gamer" ]; then
+		sudo pacman -S --needed --noconfirm acpi_call
+	fi
+	sudo modprobe acpi_call
+	settings_file=$HOME/homebrew/settings/LegionGoRemapper/settings.json
+	sed -i 's/\"forceEnableCustomFanCurves\": false/\"forceEnableCustomFanCurves\": true/' $settings_file
+	info "Custom fan curves enabled!"
 	
 elif [ "$Choice" == "UNINSTALL_RGB" ]; then
 	if [ "$EUID" -eq 0 ]
@@ -78,84 +134,84 @@ elif [ "$Choice" == "UNINSTALL_RGB" ]; then
 		exit
 	fi
 	
-	cd $HOME
-
-	sudo rm -rf $HOME/homebrew/plugins/LegionGoRemapper
+	if ! [ -d $HOME/homebrew/plugins/LegionGoRemapper ]; then
+		error "LegionGoRemapper plugin not found."
+	else
+		sudo rm -rf $HOME/homebrew/plugins/LegionGoRemapper
 	
-	sudo systemctl restart plugin_loader.service
+		sudo systemctl restart plugin_loader.service
 	
-	zenity --info --title "Legion Go Tools for Linux" --text "Legion Go Remapper plugin removed!" --width 400 --height 75
+		info "Legion Go Remapper plugin removed!"
+	fi
 
 elif [ "$Choice" == "ROGUE" ]; then
-	cd $HOME
-	
 	curl -sSL https://raw.githubusercontent.com/corando98/ROGueENEMY/main/chimera_install.sh | sudo sh
 	
-	zenity --info --title "Legion Go Tools for Linux" --text "ROGueENEMY installed/updated!" --width 400 --height 75
+	info "ROGueENEMY installed/updated!" 
 
 elif [ "$Choice" == "UNINSTALL_ROGUE" ]; then
-	cd $HOME
-	
 	curl -sSL https://raw.githubusercontent.com/corando98/ROGueENEMY/main/chimera_uninstall.sh | sudo sh
 
-	zenity --info --title "Legion Go Tools for Linux" --text "ROGueENEMY uninstalled!" --width 400 --height 75
+	info "ROGueENEMY uninstalled!" 
 
 elif [ "$Choice" == "HHD" ]; then
-	cd $HOME
-	
-	# get needed dev tools
-	sudo pacman -S --needed --noconfirm base-devel
-	
-	# remove HHD cloned repo folder if it already exists
-	sudo rm -rf hhd/
-	
-	echo -e "Installing HHD...\n"
-	git clone https://aur.archlinux.org/hhd.git
-	cd hhd/
-	makepkg -si --noconfirm
-	
-	# need to uninstall handygccs since it will conflict with HHD
-	echo -e "Uninstalling handygccs-git...\n"
-	sudo pacman -R --noconfirm handygccs-git
-	
-	# add PlayStation driver quirk. This will use Steam Input instead of the PS driver - we'll have touchpad issues otherwise
-	#echo -e "Blacklisting hid_playstation...\n"
-	#echo "blacklist hid_playstation" | sudo tee /usr/lib/modprobe.d/hhd.conf
-	#echo -e "hid_playstation blacklisted!\n"
-	
-	echo -e "Enabling HHD service...\n"
-	sudo systemctl enable hhd@$(whoami)
-	
-	zenity --info --title "Legion Go Tools for Linux" --text "HHD has been installed/upgraded! (Note: you will need to restart your computer for the changes to take effect.)" --width 400 --height 75
+	if [ $USER == "gamer" ]; then
+		# get needed dev tools
+		sudo pacman -S --needed --noconfirm base-devel
+		
+		# remove HHD cloned repo folder if it already exists
+		sudo rm -rf hhd/
+		
+		echo -e "Installing HHD...\n"
+		git clone https://aur.archlinux.org/hhd.git
+		cd hhd/
+		makepkg -si --noconfirm
+		
+		# need to uninstall handygccs since it will conflict with HHD
+		echo -e "Uninstalling handygccs-git...\n"
+		sudo pacman -R --noconfirm handygccs-git
+		
+		# add PlayStation driver quirk. This will use Steam Input instead of the PS driver - we'll have touchpad issues otherwise
+		#echo -e "Blacklisting hid_playstation...\n"
+		#echo "blacklist hid_playstation" | sudo tee /usr/lib/modprobe.d/hhd.conf
+		#echo -e "hid_playstation blacklisted!\n"
+		
+		echo -e "Enabling HHD service...\n"
+		sudo systemctl enable hhd@$(whoami)
+		
+		info "HHD has been installed/upgraded! (Note: you will need to restart your computer for the changes to take effect.)"
+	else
+		info "Currently this function only works on ChimeraOS."
+	fi 
 	
 elif [ "$Choice" == "UNINSTALL_HHD" ]; then
-	cd $HOME
-	
-	echo -e "Stopping HHD service...\n"
-	sudo systemctl disable hhd@$(whoami)
-	
-	echo -e "Installing handygccs-git...\n"
-	rm -rf handygccs-git/
-	git clone https://aur.archlinux.org/handygccs-git.git
-	cd handygccs-git/
-	makepkg -si --noconfirm
-	
-	echo -e "Uninstalling HHD...\n"
-	sudo pacman -R --noconfirm hhd
-	sudo rm /etc/udev/modprobe.d/hhd.conf
-	rm -rf $HOME/.config/hhd
-	
-	echo -e "Enabling handycon service...\n"
-	sudo systemctl enable handycon.service
-	
-	zenity --info --title "Legion Go Tools for Linux" --text "HHD has been uninstalled! Restart for changes to take effect." --width 400 --height 75
+	if [ $USER == "gamer" ]; then
+		echo -e "Stopping HHD service...\n"
+		sudo systemctl disable hhd@$(whoami)
+		
+		echo -e "Installing handygccs-git...\n"
+		rm -rf handygccs-git/
+		git clone https://aur.archlinux.org/handygccs-git.git
+		cd handygccs-git/
+		makepkg -si --noconfirm
+		
+		echo -e "Uninstalling HHD...\n"
+		sudo pacman -R --noconfirm hhd
+		sudo rm /etc/udev/modprobe.d/hhd.conf
+		rm -rf $HOME/.config/hhd
+		
+		echo -e "Enabling handycon service...\n"
+		sudo systemctl enable handycon.service
+		
+		info "HHD has been uninstalled! Restart for changes to take effect."
+	else
+		info "Currently this function only works on ChimeraOS."
+	fi
 
 elif [ "$Choice" == "STEAM_PATCH" ]; then
-	cd $HOME
-	
 	curl -L https://github.com/corando98/steam-patch/raw/main/install.sh | sh
 	
-	zenity --info --title "Legion Go Tools for Linux" --text "Steam-Patch has been installed!" --width 400 --height 75
+	info "Steam-Patch has been installed!" 
 
 elif [ "$Choice" == "UPDATE_STEAM_PATCH" ]; then
 	cd $HOME/steam-patch/
@@ -167,17 +223,17 @@ elif [ "$Choice" == "UPDATE_STEAM_PATCH" ]; then
 	cargo build --release --target x86_64-unknown-linux-gnu
 	sudo mv $HOME/steam-patch/target/x86_64-unknown-linux-gnu/release/steam-patch /usr/bin/steam-patch && sudo systemctl restart steam-patch.service
 	
-	zenity --info --title "Legion Go Tools for Linux" --text "Steam-Patch has been updated!" --width 400 --height 75
+	info "Steam-Patch has been updated!"
+	
+	cd $HOME 
 
 elif [ "$Choice" == "UNINSTALL_STEAM_PATCH" ]; then
-	cd $HOME
-	
 	curl -L https://raw.githubusercontent.com/corando98/steam-patch/main/uninstall.sh | sh
 	
-	zenity --info --title "Legion Go Tools for Linux" --text "Steam-Patch has been uninstalled!" --width 400 --height 75
+	info "Steam-Patch has been uninstalled!" 
 
 elif [ "$Choice" == "LEGOTHEME" ]; then
-	zenity --warning --title "Legion Go Tools for Linux" --text "Make sure you have the CSS Loader plugin installed before proceeding!" --width 400 --height 75
+	warning "Make sure you have the CSS Loader plugin installed before proceeding!" 
 	
 	echo -e "Downloading Legion Go theme for CSS Loader...\n"
 	cd $HOME/homebrew/themes
@@ -187,10 +243,12 @@ elif [ "$Choice" == "LEGOTHEME" ]; then
 	
 	git clone https://github.com/frazse/SBP-Legion-Go-Theme.git
 	
-	zenity --info --title "Legion Go Tools for Linux" --text "Legion Go theme has been installed! Enable it via the CSS Loader plugin." --width 400 --height 75
+	info "Legion Go theme has been installed! Enable it via the CSS Loader plugin."
+	
+	cd $HOME 
 
 elif [ "$Choice" == "PS5toXBOX" ]; then
-	zenity --warning --title "Legion Go Tools for Linux" --text "Make sure you have the CSS Loader plugin installed before proceeding!" --width 400 --height 75
+	warning "Make sure you have the CSS Loader plugin installed before proceeding!" 
 
 	echo -e "Downloading Xbox controller glyphs...\n"
 	cd $HOME/homebrew/themes 
@@ -200,7 +258,9 @@ elif [ "$Choice" == "PS5toXBOX" ]; then
 	
 	git clone https://github.com/frazse/PS5-to-Xbox-glyphs
 	
-	zenity --info --title "Legion Go Tools for Linux" --text "Xbox controller glyph theme has been installed! Enable it via the CSS Loader plugin." --width 400 --height 75
+	info "Xbox controller glyph theme has been installed! Enable it via the CSS Loader plugin." 
+	
+	cd $HOME
 
 fi
 done
