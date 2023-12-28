@@ -54,7 +54,7 @@ fi
 cd $HOME
 
 while true; do
-Choice=$(zen_nospam --width 1000 --height 550 --list --radiolist --multiple --title "$title"\
+Choice=$(zen_nospam --width 1000 --height 1000 --list --radiolist --multiple --title "$title"\
 	--column "Select One" \
 	--column "Option" \
 	--column="Description"\
