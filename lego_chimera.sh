@@ -47,7 +47,7 @@ get_sudo_password
 # unlock filesystem if we're using ChimeraOS
 if [ $USER == "gamer" ]; then
 	echo -e "Unlocking file system...\n"
-	sudo frzr-unlock
+	sudo -Sp '' frzr-unlock<<<${sudo_password}
 	echo -e "Unlocked!\n"
 fi
 
